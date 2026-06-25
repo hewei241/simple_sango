@@ -3,9 +3,9 @@
  * 格子为四方连通；城市坐标由真实经纬度换算后微调至合适地块
  */
 
-const MAP_WIDTH = 120;
-const MAP_HEIGHT = 90;
-const TILE_SIZE = 24;
+const MAP_WIDTH = 240;
+const MAP_HEIGHT = 180;
+const TILE_SIZE = 12;
 const TERRAIN_ONLY = true;
 const TEXTURE_SIZE = 64;
 const TEXTURE_VARIANTS = 3;

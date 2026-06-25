@@ -151,7 +151,7 @@ class MapRenderer {
   }
 
   _drawCellCoords(px, py, ts, x, y) {
-    if (this.viewMode !== "grid" || ts < 22) return;
+    if (this.viewMode !== "grid" || ts < 16) return;
     const { ctx } = this;
     const fontSize = Math.max(8, Math.min(11, ts * 0.28));
     ctx.font = `${fontSize}px Microsoft YaHei, PingFang SC, sans-serif`;
