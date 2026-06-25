@@ -132,6 +132,12 @@ function geoToGrid(lon, lat) {
   return [Math.max(0, Math.min(MAP_WIDTH - 1, x)), Math.max(0, Math.min(MAP_HEIGHT - 1, y))];
 }
 
+function gridToGeo(x, y) {
+  const lon = GEO.lonMin + (x / (MAP_WIDTH - 1)) * (GEO.lonMax - GEO.lonMin);
+  const lat = GEO.latMax - (y / (MAP_HEIGHT - 1)) * (GEO.latMax - GEO.latMin);
+  return [lon, lat];
+}
+
 function createEmptyMap() {
   const tiles = [];
   for (let y = 0; y < MAP_HEIGHT; y++) {

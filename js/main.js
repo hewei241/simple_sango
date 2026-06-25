@@ -51,8 +51,10 @@
       return;
     }
 
+    const [lon, lat] = gridToGeo(tile.x, tile.y);
     const rows = [
       ["坐标", `(${tile.x}, ${tile.y})`],
+      ["经纬度", `${lon.toFixed(2)}°E, ${lat.toFixed(2)}°N`],
       ["地形", terrainName(tile.terrain)],
       ["州郡", tile.region || "—"],
       ["势力", factionName(tile.faction)],
