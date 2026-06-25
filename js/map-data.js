@@ -3,9 +3,10 @@
  * 格子为四方连通；城市坐标由真实经纬度换算后微调至合适地块
  */
 
-const MAP_WIDTH = 88;
-const MAP_HEIGHT = 66;
-const TILE_SIZE = 32;
+const MAP_WIDTH = 120;
+const MAP_HEIGHT = 90;
+const TILE_SIZE = 24;
+const TERRAIN_ONLY = true;
 const TEXTURE_SIZE = 64;
 const TEXTURE_VARIANTS = 3;
 
@@ -255,7 +256,6 @@ function assignFactions(tiles) {
 function buildThreeKingdomsMap() {
   const tiles = createEmptyMap();
 
-  // 从真实中国地理栅格加载地形（scripts/build_china_terrain.py 生成）
   for (let y = 0; y < MAP_HEIGHT; y++) {
     const row = CHINA_TERRAIN_ROWS[y] || "";
     for (let x = 0; x < MAP_WIDTH; x++) {
@@ -264,28 +264,13 @@ function buildThreeKingdomsMap() {
     }
   }
 
-  assignRegions(tiles);
-
-  for (const id of Object.keys(CITIES)) {
-    placeCity(tiles, id);
-  }
-
-  assignFactions(tiles);
-
-  const provinceLabels = PROVINCE_LABELS.map((p) => {
-    const [x, y] = geoToGrid(p.lon, p.lat);
-    return { name: p.name, x, y };
-  });
-
   return {
     width: MAP_WIDTH,
     height: MAP_HEIGHT,
     tileSize: TILE_SIZE,
+    terrainOnly: TERRAIN_ONLY,
     tiles,
     terrain: TERRAIN,
-    faction: FACTION,
-    cities: CITIES,
-    provinceLabels,
     geo: GEO,
     textureSize: TEXTURE_SIZE,
     textureVariants: TEXTURE_VARIANTS,

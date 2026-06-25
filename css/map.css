@@ -55,10 +55,44 @@ body {
   grid-area: toolbar;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 24px;
   padding: 10px 24px;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
+}
+
+.view-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.view-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.view-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.view-btn.active {
+  color: var(--text);
+  background: rgba(201, 162, 39, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.view-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .legend {
@@ -95,16 +129,15 @@ body {
   image-rendering: pixelated;
 }
 
-.legend-terrain .legend-item[data-terrain="plain"]::before { background-image: url("../assets/tiles/plain_0.png"); }
-.legend-terrain .legend-item[data-terrain="hill"]::before { background-image: url("../assets/tiles/hill_0.png"); }
-.legend-terrain .legend-item[data-terrain="forest"]::before { background-image: url("../assets/tiles/forest_0.png"); }
-.legend-terrain .legend-item[data-terrain="mountain"]::before { background-image: url("../assets/tiles/mountain_0.png"); }
-.legend-terrain .legend-item[data-terrain="river"]::before { background-image: url("../assets/tiles/river_0.png"); }
-.legend-terrain .legend-item[data-terrain="sea"]::before { background-image: url("../assets/tiles/sea_0.png"); }
-.legend-terrain .legend-item[data-terrain="coast"]::before { background-image: url("../assets/tiles/coast_0.png"); }
-.legend-terrain .legend-item[data-terrain="desert"]::before { background-image: url("../assets/tiles/desert_0.png"); }
-.legend-terrain .legend-item[data-terrain="swamp"]::before { background-image: url("../assets/tiles/swamp_0.png"); }
-.legend-terrain .legend-item[data-terrain="city"]::before { background-image: url("../assets/tiles/city_0.png"); }
+.legend-terrain .legend-item[data-terrain="plain"]::before { background: #8faa5c; background-image: none; }
+.legend-terrain .legend-item[data-terrain="hill"]::before { background: #8a9a58; background-image: none; }
+.legend-terrain .legend-item[data-terrain="forest"]::before { background: #4a7340; background-image: none; }
+.legend-terrain .legend-item[data-terrain="mountain"]::before { background: #8b7355; background-image: none; }
+.legend-terrain .legend-item[data-terrain="river"]::before { background: #5ba4c9; background-image: none; }
+.legend-terrain .legend-item[data-terrain="sea"]::before { background: #2c5f7a; background-image: none; }
+.legend-terrain .legend-item[data-terrain="coast"]::before { background: #b8a878; background-image: none; }
+.legend-terrain .legend-item[data-terrain="desert"]::before { background: #c8b070; background-image: none; }
+.legend-terrain .legend-item[data-terrain="swamp"]::before { background: #4a7050; background-image: none; }
 
 .legend-item[data-faction="wei"]::before { background: #4a6fa5; background-image: none; }
 .legend-item[data-faction="shu"]::before { background: #6b8f4e; background-image: none; }

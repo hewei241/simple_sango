@@ -3,17 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>三国大地图</title>
+  <title>中国地形图</title>
   <link rel="stylesheet" href="css/map.css">
 </head>
 <body>
   <div id="app">
     <header class="header">
-      <h1>三国大地图</h1>
-      <p class="subtitle">参照中国真实海岸线 · 拖动平移 · 滚轮缩放 · 双击复位</p>
+      <h1>中国地形图</h1>
+      <p class="subtitle">由 JPG 识别生成的 120×90 方格地形 · 滚轮放大可见格子 · 拖动平移</p>
     </header>
 
     <div class="toolbar">
+      <div class="view-toggle">
+        <button type="button" id="btnViewGrid" class="view-btn active">方格地形</button>
+        <button type="button" id="btnViewJpg" class="view-btn">原图对照</button>
+      </div>
       <div class="legend legend-terrain">
         <span class="legend-title">地形</span>
         <span class="legend-item" data-terrain="plain">平原</span>
@@ -25,32 +29,23 @@
         <span class="legend-item" data-terrain="coast">海岸</span>
         <span class="legend-item" data-terrain="desert">沙漠</span>
         <span class="legend-item" data-terrain="swamp">沼泽</span>
-        <span class="legend-item" data-terrain="city">城池</span>
-      </div>
-      <div class="legend">
-        <span class="legend-title">势力</span>
-        <span class="legend-item" data-faction="wei">魏</span>
-        <span class="legend-item" data-faction="shu">蜀</span>
-        <span class="legend-item" data-faction="wu">吴</span>
-        <span class="legend-item" data-faction="neutral">中立</span>
       </div>
     </div>
 
     <div class="map-wrapper">
-      <div id="loadingOverlay" class="loading-overlay">加载地形贴图…</div>
       <canvas id="mapCanvas"></canvas>
       <div id="tooltip" class="tooltip hidden"></div>
     </div>
 
     <aside id="infoPanel" class="info-panel">
       <h2>地块信息</h2>
-      <p class="hint">点击格子查看详情</p>
+      <p class="hint">点击格子查看地形</p>
     </aside>
   </div>
 
   <script src="js/china-terrain-data.js"></script>
+  <script src="js/jpg-source-config.js"></script>
   <script src="js/map-data.js"></script>
-  <script src="js/tile-atlas.js"></script>
   <script src="js/map-renderer.js"></script>
   <script src="js/main.js"></script>
 </body>

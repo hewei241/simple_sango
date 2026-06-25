@@ -1,5 +1,5 @@
 /**
- * 地图交互入口
+ * 纯地形地图交互
  */
 (function () {
   const canvas = document.getElementById("mapCanvas");
@@ -21,67 +21,35 @@
     return MAP_DATA.terrain[id]?.desc ?? "";
   }
 
-  function factionName(id) {
-    return MAP_DATA.faction[id]?.name ?? id;
-  }
-
   function updateTooltip(tile, clientX, clientY) {
     if (!tile) {
       tooltip.classList.add("hidden");
       return;
     }
-
-    const rect = canvas.parentElement.getBoundingClientRect();
-    let text = `(${tile.x}, ${tile.y}) ${terrainName(tile.terrain)}`;
-    if (tile.region) text += ` · ${tile.region}`;
-    if (tile.city) text += ` · ${MAP_DATA.cities[tile.city].name}`;
-
-    tooltip.textContent = text;
+    const [lon, lat] = gridToGeo(tile.x, tile.y);
+    tooltip.textContent = `${terrainName(tile.terrain)} · ${lon.toFixed(1)}°E ${lat.toFixed(1)}°N`;
     tooltip.classList.remove("hidden");
+    const rect = canvas.parentElement.getBoundingClientRect();
     tooltip.style.left = `${clientX - rect.left + 12}px`;
     tooltip.style.top = `${clientY - rect.top + 12}px`;
   }
 
   function updateInfoPanel(tile) {
     if (!tile) {
-      infoPanel.innerHTML = `
-        <h2>地块信息</h2>
-        <p class="hint">点击格子查看详情</p>
-      `;
+      infoPanel.innerHTML = `<h2>地块信息</h2><p class="hint">点击格子查看地形</p>`;
       return;
     }
-
     const [lon, lat] = gridToGeo(tile.x, tile.y);
-    const rows = [
-      ["坐标", `(${tile.x}, ${tile.y})`],
-      ["经纬度", `${lon.toFixed(2)}°E, ${lat.toFixed(2)}°N`],
-      ["地形", terrainName(tile.terrain)],
-      ["州郡", tile.region || "—"],
-      ["势力", factionName(tile.faction)],
-      ["移动消耗", String(MAP_DATA.terrain[tile.terrain]?.moveCost ?? "—")],
-    ];
-
-    let html = `<h2>地块信息</h2>`;
-    for (const [label, value] of rows) {
-      html += `<div class="info-row"><span>${label}</span><span>${value}</span></div>`;
-    }
-
-    const desc = terrainDesc(tile.terrain);
-    if (desc) {
-      html += `<p class="terrain-desc">${desc}</p>`;
-    }
-
-    if (tile.city) {
-      const city = MAP_DATA.cities[tile.city];
-      html += `
-        <div class="info-city">
-          <h3>${city.name}</h3>
-          <p>${city.desc}</p>
-        </div>
-      `;
-    }
-
-    infoPanel.innerHTML = html;
+    const t = MAP_DATA.terrain[tile.terrain];
+    infoPanel.innerHTML = `
+      <h2>地块信息</h2>
+      <div class="info-row"><span>格子</span><span>(${tile.x}, ${tile.y})</span></div>
+      <div class="info-row"><span>经度</span><span>${lon.toFixed(2)}°E</span></div>
+      <div class="info-row"><span>纬度</span><span>${lat.toFixed(2)}°N</span></div>
+      <div class="info-row"><span>地形</span><span>${t.name}</span></div>
+      <div class="info-row"><span>通行</span><span>${t.moveCost >= 99 ? "不可" : "消耗 " + t.moveCost}</span></div>
+      <p class="terrain-desc">${t.desc || ""}</p>
+    `;
   }
 
   function bindEvents() {
@@ -91,16 +59,10 @@
       lastX = e.clientX;
       lastY = e.clientY;
     });
-
-    window.addEventListener("mouseup", () => {
-      isDragging = false;
-    });
+    window.addEventListener("mouseup", () => { isDragging = false; });
 
     canvas.addEventListener("mousemove", (e) => {
       const rect = canvas.getBoundingClientRect();
-      const sx = e.clientX - rect.left;
-      const sy = e.clientY - rect.top;
-
       if (isDragging) {
         const dx = e.clientX - lastX;
         const dy = e.clientY - lastY;
@@ -110,8 +72,7 @@
         lastY = e.clientY;
         return;
       }
-
-      const tile = renderer.screenToTile(sx, sy);
+      const tile = renderer.screenToTile(e.clientX - rect.left, e.clientY - rect.top);
       renderer.setHoveredTile(tile);
       updateTooltip(tile, e.clientX, e.clientY);
     });
@@ -141,17 +102,40 @@
     });
   }
 
-  TileAtlas.loadAll()
-    .then(() => {
-      renderer = new MapRenderer(canvas, MAP_DATA);
-      renderer.setTexturesReady(true);
-      bindEvents();
+  renderer = new MapRenderer(canvas, MAP_DATA);
+  bindEvents();
+
+  const btnGrid = document.getElementById("btnViewGrid");
+  const btnJpg = document.getElementById("btnViewJpg");
+
+  function setViewButtons(mode) {
+    btnGrid?.classList.toggle("active", mode === "grid");
+    btnJpg?.classList.toggle("active", mode === "jpg");
+  }
+
+  btnGrid?.addEventListener("click", () => {
+    renderer.setViewMode("grid");
+    setViewButtons("grid");
+  });
+
+  btnJpg?.addEventListener("click", () => {
+    renderer.setViewMode("jpg");
+    setViewButtons("jpg");
+  });
+
+  // 预加载 JPG 供「原图对照」切换，默认显示识别后的方格地形
+  if (typeof JPG_SOURCE !== "undefined" && typeof JPG_MAP_BOUNDS !== "undefined") {
+    const jpgImg = new Image();
+    jpgImg.onload = () => {
+      renderer.setJpgSource(jpgImg, JPG_MAP_BOUNDS);
       if (loadingEl) loadingEl.classList.add("hidden");
-    })
-    .catch((err) => {
-      console.warn(err);
-      renderer = new MapRenderer(canvas, MAP_DATA);
-      bindEvents();
+    };
+    jpgImg.onerror = () => {
+      btnJpg?.setAttribute("disabled", "true");
       if (loadingEl) loadingEl.classList.add("hidden");
-    });
+    };
+    jpgImg.src = JPG_SOURCE;
+  } else if (loadingEl) {
+    loadingEl.classList.add("hidden");
+  }
 })();
