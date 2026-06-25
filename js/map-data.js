@@ -62,11 +62,11 @@ const TERRAIN = {
   },
 };
 
-/** 地图覆盖范围（东汉十三州大致边界） */
+/** 地图覆盖范围（含东部海域） */
 const GEO = {
   lonMin: 98,
-  lonMax: 122,
-  latMin: 18,
+  lonMax: 123.5,
+  latMin: 17.5,
   latMax: 42,
 };
 
@@ -148,77 +148,12 @@ function inBounds(x, y) {
   return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT;
 }
 
-function setTerrain(tiles, x, y, terrain) {
-  if (inBounds(x, y)) tiles[y][x].terrain = terrain;
-}
-
 function fillRect(tiles, x1, y1, x2, y2, fn) {
   for (let y = y1; y <= y2; y++) {
     for (let x = x1; x <= x2; x++) {
       if (inBounds(x, y)) fn(tiles[y][x], x, y);
     }
   }
-}
-
-function drawGeoLine(tiles, points, terrain, width = 1) {
-  for (let i = 0; i < points.length - 1; i++) {
-    const [x0, y0] = geoToGrid(points[i][0], points[i][1]);
-    const [x1, y1] = geoToGrid(points[i + 1][0], points[i + 1][1]);
-    drawLine(tiles, x0, y0, x1, y1, terrain, width);
-  }
-}
-
-function drawLine(tiles, x0, y0, x1, y1, terrain, width = 1) {
-  const dx = Math.abs(x1 - x0);
-  const dy = Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1;
-  const sy = y0 < y1 ? 1 : -1;
-  let err = dx - dy;
-  let x = x0;
-  let y = y0;
-  const half = Math.floor(width / 2);
-
-  while (true) {
-    for (let oy = -half; oy <= half; oy++) {
-      for (let ox = -half; ox <= half; ox++) {
-        if (ox * ox + oy * oy <= half * half + half) {
-          setTerrain(tiles, x + ox, y + oy, terrain);
-        }
-      }
-    }
-    if (x === x1 && y === y1) break;
-    const e2 = 2 * err;
-    if (e2 > -dy) { err -= dy; x += sx; }
-    if (e2 < dx) { err += dx; y += sy; }
-  }
-}
-
-function drawGeoPoly(tiles, points, terrain) {
-  const verts = points.map(([lon, lat]) => geoToGrid(lon, lat));
-  let minX = MAP_WIDTH, minY = MAP_HEIGHT, maxX = 0, maxY = 0;
-  for (const [x, y] of verts) {
-    minX = Math.min(minX, x); minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-  }
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
-      if (pointInPoly(x + 0.5, y + 0.5, verts)) {
-        setTerrain(tiles, x, y, terrain);
-      }
-    }
-  }
-}
-
-function pointInPoly(x, y, verts) {
-  let inside = false;
-  for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
-    const [xi, yi] = verts[i];
-    const [xj, yj] = verts[j];
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
-      inside = !inside;
-    }
-  }
-  return inside;
 }
 
 function isPassable(t) {
@@ -311,172 +246,26 @@ function assignFactions(tiles) {
   }
 }
 
-function applyTerrainOverlays(tiles) {
-  // 凉州沙漠
-  applyGeoTerrain(tiles, [
-    [98, 36], [106, 36], [106, 40], [100, 41], [98, 38],
-  ], "desert", ["plain"]);
-
-  // 荆南沼泽
-  applyGeoTerrain(tiles, [
-    [109, 28], [113, 28], [114, 26], [111, 25], [108, 26],
-  ], "swamp", ["plain", "forest"]);
-
-  // 山地边缘丘陵
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    for (let x = 0; x < MAP_WIDTH; x++) {
-      if (tiles[y][x].terrain !== "plain") continue;
-      let nearMountain = false;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx, ny = y + dy;
-        if (inBounds(nx, ny) && tiles[ny][nx].terrain === "mountain") {
-          nearMountain = true;
-          break;
-        }
-      }
-      if (nearMountain && (x + y) % 2 === 0) tiles[y][x].terrain = "hill";
-    }
-  }
-
-  // 临海海岸
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    for (let x = 0; x < MAP_WIDTH; x++) {
-      if (!["plain", "hill"].includes(tiles[y][x].terrain)) continue;
-      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const nx = x + dx, ny = y + dy;
-        if (inBounds(nx, ny) && tiles[ny][nx].terrain === "sea") {
-          tiles[y][x].terrain = "coast";
-          break;
-        }
-      }
-    }
-  }
-}
-
-function applyGeoTerrain(tiles, points, terrain, onlyReplace = ["plain"]) {
-  const verts = points.map(([lon, lat]) => geoToGrid(lon, lat));
-  let minX = MAP_WIDTH, minY = MAP_HEIGHT, maxX = 0, maxY = 0;
-  for (const [x, y] of verts) {
-    minX = Math.min(minX, x); minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-  }
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
-      if (pointInPoly(x + 0.5, y + 0.5, verts) && onlyReplace.includes(tiles[y][x].terrain)) {
-        tiles[y][x].terrain = terrain;
-      }
-    }
-  }
-}
-
 function buildThreeKingdomsMap() {
   const tiles = createEmptyMap();
 
-  // 中国大陆主体轮廓（简化多边形）
-  drawGeoPoly(tiles, [
-    [98, 42], [105, 42], [112, 41], [118, 40], [122, 38],
-    [122, 32], [121, 28], [119, 24], [115, 20], [110, 18],
-    [105, 19], [100, 22], [98, 28], [98, 36],
-  ], "plain");
-
-  // 山东半岛
-  drawGeoPoly(tiles, [
-    [117.5, 37.5], [120, 37], [121.5, 36], [121, 35], [118, 35.5], [117, 36.5],
-  ], "plain");
-
-  // 辽东半岛
-  drawGeoPoly(tiles, [
-    [120, 40.5], [122, 40], [122, 38.5], [120, 39], [119, 40],
-  ], "plain");
-
-  // 燕山
-  drawGeoLine(tiles, [[114, 41], [117, 40.5], [120, 39.5]], "mountain", 3);
-  // 太行山
-  drawGeoLine(tiles, [[110, 40], [111, 37], [112, 34], [113, 32]], "mountain", 3);
-  // 秦岭
-  drawGeoLine(tiles, [[104, 34], [108, 34], [112, 33.5], [116, 33]], "mountain", 4);
-  // 大巴山
-  drawGeoLine(tiles, [[106, 33], [109, 32], [111, 31.5]], "mountain", 3);
-  // 武陵山
-  drawGeoLine(tiles, [[108, 30], [111, 29.5], [113, 29]], "mountain", 2);
-  // 南岭
-  drawGeoLine(tiles, [[108, 26], [112, 25.5], [116, 25], [118, 26]], "mountain", 3);
-  // 武夷山 / 天目山
-  drawGeoLine(tiles, [[116, 28], [118, 29], [120, 30]], "mountain", 2);
-  // 横断山 / 邛崃山
-  drawGeoLine(tiles, [[99, 32], [101, 30], [103, 28]], "mountain", 3);
-
-  // 巴蜀盆地内部平野
-  drawGeoPoly(tiles, [
-    [103, 31.5], [106, 32], [108, 31], [107, 29], [104, 29], [102, 30],
-  ], "plain");
-
-  // 长江中下游平原、华北平原标记为平
-  fillRect(tiles, 0, 0, MAP_WIDTH - 1, MAP_HEIGHT - 1, (t) => {
-    if (t.terrain === "sea") return;
-    if (t.terrain === "plain") return;
-    // 保留已有山地
-  });
-
-  // 森林：荆襄、江南丘陵（不覆盖山河）
-  const forestPolys = [
-    [[109, 31], [113, 31], [115, 29], [113, 27], [109, 28]],
-    [[116, 31], [120, 31], [121, 29], [118, 28], [116, 29]],
-  ];
-  for (const poly of forestPolys) {
-    const verts = poly.map(([lon, lat]) => geoToGrid(lon, lat));
-    let minX = MAP_WIDTH, minY = MAP_HEIGHT, maxX = 0, maxY = 0;
-    for (const [x, y] of verts) {
-      minX = Math.min(minX, x); minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-    }
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        if (pointInPoly(x + 0.5, y + 0.5, verts) && tiles[y][x].terrain === "plain") {
-          tiles[y][x].terrain = "forest";
-        }
-      }
+  // 从真实中国地理栅格加载地形（scripts/build_china_terrain.py 生成）
+  for (let y = 0; y < MAP_HEIGHT; y++) {
+    const row = CHINA_TERRAIN_ROWS[y] || "";
+    for (let x = 0; x < MAP_WIDTH; x++) {
+      const ch = row[x] || "s";
+      tiles[y][x].terrain = CHINA_TERRAIN_DECODE[ch] || "sea";
     }
   }
 
-  // 黄河（含河套北弯）
-  drawGeoLine(tiles, [
-    [103, 36], [105, 37.5], [107, 38], [110, 37],
-    [112, 36], [114, 35.5], [116, 36], [118, 37.5],
-    [119, 37], [120, 35.5], [121, 34.5],
-  ], "river", 2);
-
-  // 渭河
-  drawGeoLine(tiles, [[104, 34.8], [106, 34.5], [108.9, 34.3]], "river", 2);
-
-  // 汉水
-  drawGeoLine(tiles, [
-    [106.5, 33.5], [109, 33], [111, 32.5], [112.1, 32.0],
-    [112.5, 31.2], [113.5, 30.5],
-  ], "river", 2);
-
-  // 长江
-  drawGeoLine(tiles, [
-    [99, 31], [102, 30.5], [104, 30.2], [106, 30.5],
-    [109.5, 31], [112, 30.5], [114.5, 30.5], [116.5, 31.5],
-    [118.5, 32], [121, 32],
-  ], "river", 3);
-
-  // 淮河
-  drawGeoLine(tiles, [[112, 33.5], [115, 33], [117, 33], [119, 33.5]], "river", 2);
-
   assignRegions(tiles);
 
-  // 按经纬度放置全部城池
   for (const id of Object.keys(CITIES)) {
     placeCity(tiles, id);
   }
 
   assignFactions(tiles);
 
-  applyTerrainOverlays(tiles);
-
-  // 州郡标注格坐标
   const provinceLabels = PROVINCE_LABELS.map((p) => {
     const [x, y] = geoToGrid(p.lon, p.lat);
     return { name: p.name, x, y };
