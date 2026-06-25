@@ -196,6 +196,8 @@ def fetch_elevations_land(
     map_w: int = MAP_W,
     map_h: int = MAP_H,
     cache_name: str | None = None,
+    batch_size: int = 30,
+    sleep_seconds: float = 1.8,
 ) -> dict[tuple[int, int], float]:
     """仅对陆地点批量查询海拔，支持断点缓存。"""
     cache_file = DATA_DIR / (cache_name or f"elevation_land_{map_w}x{map_h}.json")
@@ -211,9 +213,11 @@ def fetch_elevations_land(
     if not pending:
         return result
 
-    batch_size = 30
+    batch_size = max(1, batch_size)
+    sleep_seconds = max(0.5, sleep_seconds)
     total_batches = (len(pending) + batch_size - 1) // batch_size
-    print(f"  fetching elevation: {len(pending)} land cells, {total_batches} batches...")
+    print(f"  fetching elevation: {len(pending)} land cells, {total_batches} batches")
+    print(f"  batch_size={batch_size}, sleep={sleep_seconds}s, cache={cache_file.name}")
 
     for i in range(0, len(pending), batch_size):
         batch = pending[i : i + batch_size]
@@ -255,7 +259,7 @@ def fetch_elevations_land(
         done = min(i + batch_size, len(pending))
         if done % 300 == 0 or done == len(pending):
             print(f"    {done}/{len(pending)} (cached {len(result)})")
-        time.sleep(1.8)
+        time.sleep(sleep_seconds)
 
     return result
 
@@ -321,6 +325,8 @@ def build_grid(
     china_geom: dict,
     river_lines: list,
     fetch_all_elevation: bool = False,
+    elev_batch_size: int = 30,
+    elev_sleep_seconds: float = 1.8,
 ) -> list[list[str]]:
     land_points: list[tuple[int, int, float, float]] = []
     for y in range(MAP_H):
@@ -333,7 +339,11 @@ def build_grid(
 
     elev_map: dict[tuple[int, int], float] = {}
     if fetch_all_elevation:
-        elev_map = fetch_elevations_land(land_points)
+        elev_map = fetch_elevations_land(
+            land_points,
+            batch_size=elev_batch_size,
+            sleep_seconds=elev_sleep_seconds,
+        )
     else:
         coarse_elev = ensure_coarse_elevations(china_geom)
         print(f"  interpolate elevation: 120×90 API → {MAP_W}×{MAP_H}")
@@ -364,6 +374,18 @@ def main():
         action="store_true",
         help="对当前分辨率逐格请求 Open-Meteo（慢，易限速）；默认从 120×90 API 缓存插值",
     )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=30,
+        help="海拔 API 每批格子数（默认 30，越小越慢越稳）",
+    )
+    parser.add_argument(
+        "--sleep-seconds",
+        type=float,
+        default=1.8,
+        help="海拔 API 每批之间的等待秒数（默认 1.8）",
+    )
     args = parser.parse_args()
 
     print("=== Generate terrain from geographic APIs ===")
@@ -381,7 +403,13 @@ def main():
     print(f"  river segments in bbox: {len(river_lines)}")
 
     print("3) Elevation + classify")
-    grid = build_grid(china_geom, river_lines, fetch_all_elevation=args.fetch_all_elevation)
+    grid = build_grid(
+        china_geom,
+        river_lines,
+        fetch_all_elevation=args.fetch_all_elevation,
+        elev_batch_size=args.batch_size,
+        elev_sleep_seconds=args.sleep_seconds,
+    )
 
     rows = ["".join(r) for r in grid]
     stats: dict[str, int] = {}
