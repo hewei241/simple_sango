@@ -1,6 +1,6 @@
 /**
  * 地图浏览 + 地形编辑
- * 默认开启编辑；左键涂抹，空格/中键拖动画布平移
+ * 默认浏览；开启编辑后显示笔刷，左键涂抹，空格/中键拖平移
  */
 (function () {
   const STORAGE_KEY = "simple_sango_terrain_edit_v1";
@@ -26,7 +26,7 @@
 
   const renderer = new MapRenderer(canvas, MAP_DATA);
 
-  let editMode = true;
+  let editMode = false;
   let brushTerrain = "desert";
   let dirty = false;
   let spaceHeld = false;
@@ -56,19 +56,26 @@
     palette?.querySelectorAll("[data-terrain]").forEach((el) => {
       el.classList.toggle("brush-active", el.dataset.terrain === id);
     });
-    logPaint(editMode ? `编辑中 · 笔刷「${tName(id)}」· 左键点地图` : `笔刷「${tName(id)}」`);
+    if (editMode) logPaint(`编辑中 · 笔刷「${tName(id)}」· 左键点地图`);
   }
 
   function setEditMode(on) {
     editMode = !!on;
     btnEditMode?.classList.toggle("active", editMode);
     mapWrapper?.classList.toggle("edit-mode", editMode);
+    palette?.classList.toggle("hidden", !editMode);
+    btnSaveMap?.classList.toggle("hidden", !editMode);
+    btnResetOriginal?.classList.toggle("hidden", !editMode);
+    editStatus?.classList.toggle("editing", editMode);
     if (editMode) {
       renderer.setViewMode("grid");
       btnGrid?.classList.add("active");
       btnJpg?.classList.remove("active");
+      setBrush(brushTerrain);
+    } else {
+      painting = false;
+      logPaint("浏览中 · 左键拖动平移");
     }
-    setBrush(brushTerrain);
   }
 
   function canvasPos(e) {
@@ -83,7 +90,7 @@
 
   function showInfo(tile) {
     if (!tile) {
-      infoPanel.innerHTML = `<h2>地块信息</h2><p class="hint">左键涂抹 · 空格+拖 或 中键拖 = 平移</p>`;
+      infoPanel.innerHTML = `<h2>地块信息</h2><p class="hint">点击格子查看地形 · 左键拖动平移</p>`;
       return;
     }
     const [lon, lat] = gridToGeo(tile.x, tile.y);
@@ -299,10 +306,7 @@ const CHINA_TERRAIN_DECODE = {
   btnResetOriginal?.addEventListener("click", () => resetOriginal());
 
   palette?.querySelectorAll("[data-terrain]").forEach((el) => {
-    el.addEventListener("click", () => {
-      setBrush(el.dataset.terrain);
-      setEditMode(true);
-    });
+    el.addEventListener("click", () => setBrush(el.dataset.terrain));
   });
 
   btnGrid?.addEventListener("click", () => {
@@ -317,8 +321,7 @@ const CHINA_TERRAIN_DECODE = {
     btnGrid?.classList.remove("active");
   });
 
-  setEditMode(true);
-  setBrush("desert");
+  setEditMode(false);
   renderer.draw();
   showInfo(null);
   logPaint(`已从 china-terrain-data.edit.js 加载 ${MAP_DATA.width}×${MAP_DATA.height}`);

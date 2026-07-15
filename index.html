@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>中国地形图</title>
-  <link rel="stylesheet" href="css/map.css?v=edit5">
+  <title>三国地形图</title>
+  <link rel="stylesheet" href="css/map.css?v=edit7">
 </head>
 <body>
   <div id="app">
     <header class="header">
-      <h1>中国地形图</h1>
-      <p class="subtitle">数据来自根目录 china-terrain-data.edit.js · 选笔刷左键涂色 · Ctrl+S 写回该文件</p>
+      <h1>三国地形图</h1>
+      <p class="subtitle">数据来自根目录 china-terrain-data.edit.js · 拖动/滚轮浏览 · 开编辑模式后可涂色保存</p>
       <p id="paintLog" class="paint-log">准备就绪</p>
     </header>
 
@@ -20,12 +20,12 @@
         <button type="button" id="btnViewJpg" class="view-btn">原图对照</button>
       </div>
       <div class="edit-tools">
-        <button type="button" id="btnEditMode" class="view-btn active">编辑模式</button>
-        <button type="button" id="btnSaveMap" class="view-btn" disabled>保存</button>
-        <button type="button" id="btnResetOriginal" class="view-btn">恢复原始</button>
-        <span id="editStatus" class="edit-status editing">编辑中</span>
+        <button type="button" id="btnEditMode" class="view-btn">编辑模式</button>
+        <button type="button" id="btnSaveMap" class="view-btn hidden" disabled>保存</button>
+        <button type="button" id="btnResetOriginal" class="view-btn hidden">恢复原始</button>
+        <span id="editStatus" class="edit-status">浏览中</span>
       </div>
-      <div class="legend legend-terrain" id="terrainPalette">
+      <div class="legend legend-terrain hidden" id="terrainPalette">
         <span class="legend-title">地形笔刷</span>
         <button type="button" class="legend-item" data-terrain="plain">平原</button>
         <button type="button" class="legend-item" data-terrain="hill">丘陵</button>
@@ -39,22 +39,22 @@
       </div>
     </div>
 
-    <div class="map-wrapper edit-mode" id="mapWrapper">
+    <div class="map-wrapper" id="mapWrapper">
       <canvas id="mapCanvas"></canvas>
       <div id="tooltip" class="tooltip hidden"></div>
     </div>
 
     <aside id="infoPanel" class="info-panel">
       <h2>地块信息</h2>
-      <p class="hint">左键涂抹 · 空格+拖 或 中键拖 = 平移</p>
+      <p class="hint">点击格子查看地形 · 左键拖动平移</p>
     </aside>
   </div>
 
-  <script src="js/china-terrain-data.original.js?v=edit5"></script>
-  <script src="china-terrain-data.edit.js?v=edit5"></script>
-  <script src="js/jpg-source-config.js?v=edit5"></script>
-  <script src="js/map-data.js?v=edit5"></script>
-  <script src="js/map-renderer.js?v=edit5"></script>
-  <script src="js/main.js?v=edit5"></script>
+  <script src="js/china-terrain-data.original.js?v=edit7"></script>
+  <script src="china-terrain-data.edit.js?v=edit7"></script>
+  <script src="js/jpg-source-config.js?v=edit7"></script>
+  <script src="js/map-data.js?v=edit7"></script>
+  <script src="js/map-renderer.js?v=edit7"></script>
+  <script src="js/main.js?v=edit7"></script>
 </body>
 </html>

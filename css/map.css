@@ -247,6 +247,10 @@ body {
   display: none;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .info-panel {
   grid-area: info;
   padding: 20px 16px;
