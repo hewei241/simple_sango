@@ -51,6 +51,13 @@ body {
   font-size: 0.85rem;
 }
 
+.paint-log {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #7ec8a3;
+  font-weight: 600;
+}
+
 .toolbar {
   grid-area: toolbar;
   display: flex;
@@ -95,6 +102,27 @@ body {
   cursor: not-allowed;
 }
 
+.edit-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.edit-status.dirty {
+  color: #e0b84a;
+}
+
+.edit-status.editing {
+  color: #7ec8a3;
+}
+
 .legend {
   display: flex;
   align-items: center;
@@ -112,10 +140,33 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-family: inherit;
   font-size: 0.8rem;
   padding: 2px 8px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  color: inherit;
+}
+
+.legend-item:hover {
+  border-color: rgba(201, 162, 39, 0.45);
+}
+
+.legend-item.brush-active {
+  border-color: var(--accent);
+  background: rgba(201, 162, 39, 0.22);
+  color: var(--accent);
+}
+
+.map-wrapper.edit-mode {
+  cursor: crosshair;
+}
+
+.map-wrapper.edit-mode.panning {
+  cursor: grabbing;
 }
 
 .legend-item::before {

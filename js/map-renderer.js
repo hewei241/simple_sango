@@ -169,6 +169,11 @@ class MapRenderer {
   }
 
   setHoveredTile(tile) {
+    const ax = this.hoveredTile?.x;
+    const ay = this.hoveredTile?.y;
+    const bx = tile?.x;
+    const by = tile?.y;
+    if (ax === bx && ay === by) return;
     this.hoveredTile = tile;
     this.draw();
   }

@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>中国地形图</title>
-  <link rel="stylesheet" href="css/map.css">
+  <link rel="stylesheet" href="css/map.css?v=edit5">
 </head>
 <body>
   <div id="app">
     <header class="header">
       <h1>中国地形图</h1>
-      <p class="subtitle">240×120 方格 · 120×90 插值至 240×180 后裁切南方 · 拖动 · 滚轮缩放</p>
+      <p class="subtitle">数据来自根目录 china-terrain-data.edit.js · 选笔刷左键涂色 · Ctrl+S 写回该文件</p>
+      <p id="paintLog" class="paint-log">准备就绪</p>
     </header>
 
     <div class="toolbar">
@@ -18,35 +19,42 @@
         <button type="button" id="btnViewGrid" class="view-btn active">方格地形</button>
         <button type="button" id="btnViewJpg" class="view-btn">原图对照</button>
       </div>
-      <div class="legend legend-terrain">
-        <span class="legend-title">地形</span>
-        <span class="legend-item" data-terrain="plain">平原</span>
-        <span class="legend-item" data-terrain="hill">丘陵</span>
-        <span class="legend-item" data-terrain="forest">森林</span>
-        <span class="legend-item" data-terrain="mountain">山地</span>
-        <span class="legend-item" data-terrain="river">河流</span>
-        <span class="legend-item" data-terrain="sea">海域</span>
-        <span class="legend-item" data-terrain="coast">海岸</span>
-        <span class="legend-item" data-terrain="desert">沙漠</span>
-        <span class="legend-item" data-terrain="swamp">沼泽</span>
+      <div class="edit-tools">
+        <button type="button" id="btnEditMode" class="view-btn active">编辑模式</button>
+        <button type="button" id="btnSaveMap" class="view-btn" disabled>保存</button>
+        <button type="button" id="btnResetOriginal" class="view-btn">恢复原始</button>
+        <span id="editStatus" class="edit-status editing">编辑中</span>
+      </div>
+      <div class="legend legend-terrain" id="terrainPalette">
+        <span class="legend-title">地形笔刷</span>
+        <button type="button" class="legend-item" data-terrain="plain">平原</button>
+        <button type="button" class="legend-item" data-terrain="hill">丘陵</button>
+        <button type="button" class="legend-item" data-terrain="forest">森林</button>
+        <button type="button" class="legend-item" data-terrain="mountain">山地</button>
+        <button type="button" class="legend-item" data-terrain="river">河流</button>
+        <button type="button" class="legend-item" data-terrain="sea">海域</button>
+        <button type="button" class="legend-item" data-terrain="coast">海岸</button>
+        <button type="button" class="legend-item brush-active" data-terrain="desert">沙漠</button>
+        <button type="button" class="legend-item" data-terrain="swamp">沼泽</button>
       </div>
     </div>
 
-    <div class="map-wrapper">
+    <div class="map-wrapper edit-mode" id="mapWrapper">
       <canvas id="mapCanvas"></canvas>
       <div id="tooltip" class="tooltip hidden"></div>
     </div>
 
     <aside id="infoPanel" class="info-panel">
       <h2>地块信息</h2>
-      <p class="hint">点击格子查看地形</p>
+      <p class="hint">左键涂抹 · 空格+拖 或 中键拖 = 平移</p>
     </aside>
   </div>
 
-  <script src="js/china-terrain-data.js"></script>
-  <script src="js/jpg-source-config.js"></script>
-  <script src="js/map-data.js"></script>
-  <script src="js/map-renderer.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/china-terrain-data.original.js?v=edit5"></script>
+  <script src="china-terrain-data.edit.js?v=edit5"></script>
+  <script src="js/jpg-source-config.js?v=edit5"></script>
+  <script src="js/map-data.js?v=edit5"></script>
+  <script src="js/map-renderer.js?v=edit5"></script>
+  <script src="js/main.js?v=edit5"></script>
 </body>
 </html>

@@ -20,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 OUT_JS = ROOT / "js" / "china-terrain-data.js"
+OUT_ORIGINAL_JS = ROOT / "js" / "china-terrain-data.original.js"
 
 # 先按完整高度生成（与粗网格 2 倍对应），再裁切下方只输出显示高度
 MAP_W = 240
@@ -465,23 +466,30 @@ def main():
         for c in row:
             stats[c] = stats.get(c, 0) + 1
 
-    OUT_JS.write_text(
-        f"""/**
+    header = f"""/**
  * 地理 API 自动生成（scripts/generate_from_api.py）
  * 120×90 插值 → {MAP_W}×{FULL_H}，再裁切为显示 {MAP_W}×{DISPLAY_H}
  * 显示范围：lon {LON_MIN}–{LON_MAX}，lat {out_lat_min:.4f}–{LAT_MAX}
  * 字符: s=海 p=平原 h=丘陵 f=森林 m=山地 r=河 d=沙漠 w=沼泽 c=海岸
  */
-const CHINA_TERRAIN_ROWS = {json.dumps(rows, ensure_ascii=False)};
-
-const CHINA_TERRAIN_DECODE = {{
+"""
+    decode_block = """const CHINA_TERRAIN_DECODE = {
   s: "sea", p: "plain", h: "hill", f: "forest", m: "mountain",
   r: "river", d: "desert", w: "swamp", c: "coast",
-}};
-""",
+};
+"""
+    rows_json = json.dumps(rows, ensure_ascii=False)
+    OUT_JS.write_text(
+        f"{header}const CHINA_TERRAIN_ROWS = {rows_json};\n\n{decode_block}",
+        encoding="utf-8",
+    )
+    # 原始快照：只提供 ROWS_ORIGINAL，避免与 edit.js 重复声明 DECODE
+    OUT_ORIGINAL_JS.write_text(
+        f"{header}const CHINA_TERRAIN_ROWS_ORIGINAL = {rows_json};\n",
         encoding="utf-8",
     )
     print(f"\nWritten {OUT_JS}")
+    print(f"Written {OUT_ORIGINAL_JS} (does not overwrite china-terrain-data.edit.js)")
     print("Stats:", stats)
 
 

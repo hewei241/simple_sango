@@ -253,11 +253,16 @@ function assignFactions(tiles) {
   }
 }
 
-function buildThreeKingdomsMap() {
+function buildThreeKingdomsMap(rows) {
+  // 页面正式数据源：根目录 china-terrain-data.edit.js 中的 CHINA_TERRAIN_ROWS
+  const sourceRows = rows || (typeof CHINA_TERRAIN_ROWS !== "undefined" ? CHINA_TERRAIN_ROWS : null);
+  if (!sourceRows || !sourceRows.length) {
+    throw new Error("缺少地图数据：请加载 china-terrain-data.edit.js");
+  }
   const tiles = createEmptyMap();
 
   for (let y = 0; y < MAP_HEIGHT; y++) {
-    const row = CHINA_TERRAIN_ROWS[y] || "";
+    const row = sourceRows[y] || "";
     for (let x = 0; x < MAP_WIDTH; x++) {
       const ch = row[x] || "s";
       tiles[y][x].terrain = CHINA_TERRAIN_DECODE[ch] || "sea";
@@ -274,7 +279,46 @@ function buildThreeKingdomsMap() {
     geo: GEO,
     textureSize: TEXTURE_SIZE,
     textureVariants: TEXTURE_VARIANTS,
+    source: "china-terrain-data.edit.js",
   };
+}
+
+const CHINA_TERRAIN_ENCODE = Object.fromEntries(
+  Object.entries(CHINA_TERRAIN_DECODE).map(([ch, id]) => [id, ch])
+);
+
+function exportTerrainRows(mapData) {
+  const rows = [];
+  for (let y = 0; y < mapData.height; y++) {
+    let s = "";
+    for (let x = 0; x < mapData.width; x++) {
+      const id = mapData.tiles[y][x].terrain;
+      s += CHINA_TERRAIN_ENCODE[id] || "s";
+    }
+    rows.push(s);
+  }
+  return rows;
+}
+
+function applyTerrainRows(mapData, rows) {
+  for (let y = 0; y < mapData.height; y++) {
+    const row = rows[y] || "";
+    for (let x = 0; x < mapData.width; x++) {
+      const ch = row[x] || "s";
+      const tile = mapData.tiles[y][x];
+      tile.terrain = CHINA_TERRAIN_DECODE[ch] || "sea";
+      if (tile.terrain !== "city") tile.city = null;
+    }
+  }
+}
+
+function setTileTerrain(mapData, x, y, terrainId) {
+  if (!inBounds(x, y) || !TERRAIN[terrainId]) return false;
+  const tile = mapData.tiles[y][x];
+  if (tile.terrain === terrainId) return false;
+  tile.terrain = terrainId;
+  if (terrainId !== "city") tile.city = null;
+  return true;
 }
 
 const MAP_DATA = buildThreeKingdomsMap();
