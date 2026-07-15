@@ -16,19 +16,24 @@ const TERRAIN = {
     desc: "沃野千里，行军顺畅。",
     texture: "assets/tiles/plain",
   },
-  forest: {
-    id: "forest", name: "森林", color: "#4a7340", moveCost: 2,
-    desc: "密林蔽日，弓兵之利地。",
-    texture: "assets/tiles/forest",
-  },
   hill: {
     id: "hill", name: "丘陵", color: "#8a9a58", moveCost: 2,
     desc: "起伏缓坡，骑兵稍缓。",
     texture: "assets/tiles/hill",
   },
+  highhill: {
+    id: "highhill", name: "高丘", color: "#7a8a4e", moveCost: 3,
+    desc: "高岗连绵，行军较缓。",
+    texture: "assets/tiles/hill",
+  },
   mountain: {
-    id: "mountain", name: "山地", color: "#8b7355", moveCost: 3,
+    id: "mountain", name: "山地", color: "#8b7355", moveCost: 4,
     desc: "峻岭险隘，难以通行。",
+    texture: "assets/tiles/mountain",
+  },
+  alpine: {
+    id: "alpine", name: "高山", color: "#6a5a4a", moveCost: 99,
+    desc: "雪岭绝壁，几乎不可通行。",
     texture: "assets/tiles/mountain",
   },
   river: {
@@ -45,11 +50,6 @@ const TERRAIN = {
     id: "desert", name: "沙漠", color: "#c8b070", moveCost: 2,
     desc: "沙海漫漫，补给困难。",
     texture: "assets/tiles/desert",
-  },
-  swamp: {
-    id: "swamp", name: "沼泽", color: "#4a7050", moveCost: 3,
-    desc: "泥沼湿地，步兵大耗。",
-    texture: "assets/tiles/swamp",
   },
   coast: {
     id: "coast", name: "海岸", color: "#b8a878", moveCost: 1,
@@ -164,7 +164,7 @@ function fillRect(tiles, x1, y1, x2, y2, fn) {
 }
 
 function isPassable(t) {
-  return ["plain", "forest", "hill", "coast", "desert", "city"].includes(t.terrain);
+  return ["plain", "hill", "highhill", "coast", "desert", "city"].includes(t.terrain);
 }
 
 function snapToLand(tiles, x, y, preferNearRiver = false) {

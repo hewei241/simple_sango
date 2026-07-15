@@ -44,8 +44,8 @@ RIVERS_GEOJSON_URL = (
 ELEVATION_API = "https://api.open-meteo.com/v1/elevation"
 
 TERRAIN_CHAR = {
-    "sea": "s", "plain": "p", "hill": "h", "forest": "f", "mountain": "m",
-    "river": "r", "desert": "d", "swamp": "w", "coast": "c",
+    "sea": "s", "plain": "p", "hill": "h", "highhill": "u", "mountain": "m",
+    "alpine": "a", "river": "r", "desert": "d", "coast": "c",
 }
 
 
@@ -301,28 +301,22 @@ def classify(lon: float, lat: float, elev: float, is_land: bool, river_lines: li
     if lon < 102 and 34 < lat < 37 and elev < 1600:
         return "desert"
 
-    # 沼泽：低海拔湖盆
-    if elev < 50 and 28.5 < lat < 30 and 111 < lon < 118:
-        return "swamp"
-
-    # 按真实海拔分级
+    # 按海拔分级：平原 / 丘陵 / 高丘 / 山地 / 高山
     if elev < 200:
         return "plain"
     if elev < 500:
         return "hill"
     if elev < 1200:
-        if lon > 110 and 25 < lat < 35:
-            return "forest"
-        return "hill"
+        return "highhill"
     if elev < 2500:
         return "mountain"
-    return "mountain"
+    return "alpine"
 
 
 def apply_coast(grid: list[list[str]]) -> None:
     for y in range(MAP_H):
         for x in range(MAP_W):
-            if grid[y][x] not in ("p", "h", "f", "d"):
+            if grid[y][x] not in ("p", "h", "u", "d"):
                 continue
             for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                 nx, ny = x + dx, y + dy
@@ -470,12 +464,13 @@ def main():
  * 地理 API 自动生成（scripts/generate_from_api.py）
  * 120×90 插值 → {MAP_W}×{FULL_H}，再裁切为显示 {MAP_W}×{DISPLAY_H}
  * 显示范围：lon {LON_MIN}–{LON_MAX}，lat {out_lat_min:.4f}–{LAT_MAX}
- * 字符: s=海 p=平原 h=丘陵 f=森林 m=山地 r=河 d=沙漠 w=沼泽 c=海岸
+ * 海拔：<200平 200–500丘 500–1200高丘 1200–2500山 ≥2500高山
+ * 字符: s=海 p=平原 h=丘陵 u=高丘 m=山地 a=高山 r=河 d=沙漠 c=海岸
  */
 """
     decode_block = """const CHINA_TERRAIN_DECODE = {
-  s: "sea", p: "plain", h: "hill", f: "forest", m: "mountain",
-  r: "river", d: "desert", w: "swamp", c: "coast",
+  s: "sea", p: "plain", h: "hill", u: "highhill", m: "mountain", a: "alpine",
+  r: "river", d: "desert", c: "coast",
 };
 """
     rows_json = json.dumps(rows, ensure_ascii=False)
@@ -488,8 +483,24 @@ def main():
         f"{header}const CHINA_TERRAIN_ROWS_ORIGINAL = {rows_json};\n",
         encoding="utf-8",
     )
+    # 重置可编辑地图（用户明确要求按新海拔规则重建）
+    EDIT_JS = ROOT / "china-terrain-data.edit.js"
+    EDIT_JS.write_text(
+        f"""/**
+ * 可编辑地形数据（页面每次从本文件加载）
+ * 文件：china-terrain-data.edit.js（项目根目录）
+ * 栅格 {MAP_W}×{DISPLAY_H}
+ * 海拔：<200平 200–500丘 500–1200高丘 1200–2500山 ≥2500高山
+ * 字符: s=海 p=平原 h=丘陵 u=高丘 m=山地 a=高山 r=河 d=沙漠 c=海岸
+ */
+const CHINA_TERRAIN_ROWS = {rows_json};
+
+{decode_block}""",
+        encoding="utf-8",
+    )
     print(f"\nWritten {OUT_JS}")
-    print(f"Written {OUT_ORIGINAL_JS} (does not overwrite china-terrain-data.edit.js)")
+    print(f"Written {OUT_ORIGINAL_JS}")
+    print(f"Written {EDIT_JS}")
     print("Stats:", stats)
 
 

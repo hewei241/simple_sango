@@ -182,13 +182,13 @@ body {
 
 .legend-terrain .legend-item[data-terrain="plain"]::before { background: #8faa5c; background-image: none; }
 .legend-terrain .legend-item[data-terrain="hill"]::before { background: #8a9a58; background-image: none; }
-.legend-terrain .legend-item[data-terrain="forest"]::before { background: #4a7340; background-image: none; }
+.legend-terrain .legend-item[data-terrain="highhill"]::before { background: #7a8a4e; background-image: none; }
 .legend-terrain .legend-item[data-terrain="mountain"]::before { background: #8b7355; background-image: none; }
+.legend-terrain .legend-item[data-terrain="alpine"]::before { background: #6a5a4a; background-image: none; }
 .legend-terrain .legend-item[data-terrain="river"]::before { background: #5ba4c9; background-image: none; }
 .legend-terrain .legend-item[data-terrain="sea"]::before { background: #2c5f7a; background-image: none; }
 .legend-terrain .legend-item[data-terrain="coast"]::before { background: #b8a878; background-image: none; }
 .legend-terrain .legend-item[data-terrain="desert"]::before { background: #c8b070; background-image: none; }
-.legend-terrain .legend-item[data-terrain="swamp"]::before { background: #4a7050; background-image: none; }
 
 .legend-item[data-faction="wei"]::before { background: #4a6fa5; background-image: none; }
 .legend-item[data-faction="shu"]::before { background: #6b8f4e; background-image: none; }

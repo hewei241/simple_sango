@@ -197,13 +197,13 @@
  * 可编辑地形数据（页面每次从本文件加载）
  * 文件：china-terrain-data.edit.js（项目根目录）
  * 栅格 ${MAP_DATA.width}×${MAP_DATA.height}
- * 字符: s=海 p=平原 h=丘陵 f=森林 m=山地 r=河 d=沙漠 w=沼泽 c=海岸
+ * 字符: s=海 p=平原 h=丘陵 u=高丘 m=山地 a=高山 r=河 d=沙漠 c=海岸
  */
 const CHINA_TERRAIN_ROWS = ${JSON.stringify(rows)};
 
 const CHINA_TERRAIN_DECODE = {
-  s: "sea", p: "plain", h: "hill", f: "forest", m: "mountain",
-  r: "river", d: "desert", w: "swamp", c: "coast",
+  s: "sea", p: "plain", h: "hill", u: "highhill", m: "mountain", a: "alpine",
+  r: "river", d: "desert", c: "coast",
 };
 `;
   }
