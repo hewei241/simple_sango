@@ -1,6 +1,6 @@
 /**
  * 地图浏览 + 地形编辑
- * 默认浏览；开启编辑后显示笔刷，左键涂抹，空格/中键拖平移
+ * 默认浏览（图例常显，不可选）；开启编辑后可选笔刷涂色
  */
 (function () {
   const STORAGE_KEY = "simple_sango_terrain_edit_v1";
@@ -16,6 +16,7 @@
   const editStatus = document.getElementById("editStatus");
   const paintLog = document.getElementById("paintLog");
   const palette = document.getElementById("terrainPalette");
+  const legendTitle = document.getElementById("terrainLegendTitle");
   const btnGrid = document.getElementById("btnViewGrid");
   const btnJpg = document.getElementById("btnViewJpg");
 
@@ -54,7 +55,7 @@
     if (!MAP_DATA.terrain[id] || id === "city") return;
     brushTerrain = id;
     palette?.querySelectorAll("[data-terrain]").forEach((el) => {
-      el.classList.toggle("brush-active", el.dataset.terrain === id);
+      el.classList.toggle("brush-active", editMode && el.dataset.terrain === id);
     });
     if (editMode) logPaint(`编辑中 · 笔刷「${tName(id)}」· 左键点地图`);
   }
@@ -63,10 +64,11 @@
     editMode = !!on;
     btnEditMode?.classList.toggle("active", editMode);
     mapWrapper?.classList.toggle("edit-mode", editMode);
-    palette?.classList.toggle("hidden", !editMode);
+    palette?.classList.toggle("brush-select", editMode);
     btnSaveMap?.classList.toggle("hidden", !editMode);
     btnResetOriginal?.classList.toggle("hidden", !editMode);
     editStatus?.classList.toggle("editing", editMode);
+    if (legendTitle) legendTitle.textContent = editMode ? "地形笔刷" : "地形图例";
     if (editMode) {
       renderer.setViewMode("grid");
       btnGrid?.classList.add("active");
@@ -74,6 +76,7 @@
       setBrush(brushTerrain);
     } else {
       painting = false;
+      palette?.querySelectorAll(".brush-active").forEach((el) => el.classList.remove("brush-active"));
       logPaint("浏览中 · 左键拖动平移");
     }
   }
@@ -306,7 +309,10 @@ const CHINA_TERRAIN_DECODE = {
   btnResetOriginal?.addEventListener("click", () => resetOriginal());
 
   palette?.querySelectorAll("[data-terrain]").forEach((el) => {
-    el.addEventListener("click", () => setBrush(el.dataset.terrain));
+    el.addEventListener("click", () => {
+      if (!editMode) return;
+      setBrush(el.dataset.terrain);
+    });
   });
 
   btnGrid?.addEventListener("click", () => {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>三国地形图</title>
-  <link rel="stylesheet" href="css/map.css?v=elev2">
+  <link rel="stylesheet" href="css/map.css?v=elev3">
 </head>
 <body>
   <div id="app">
@@ -25,8 +25,8 @@
         <button type="button" id="btnResetOriginal" class="view-btn hidden">恢复原始</button>
         <span id="editStatus" class="edit-status">浏览中</span>
       </div>
-      <div class="legend legend-terrain hidden" id="terrainPalette">
-        <span class="legend-title">地形笔刷</span>
+      <div class="legend legend-terrain" id="terrainPalette">
+        <span class="legend-title" id="terrainLegendTitle">地形图例</span>
         <button type="button" class="legend-item" data-terrain="plain">平原</button>
         <button type="button" class="legend-item" data-terrain="hill">丘陵</button>
         <button type="button" class="legend-item" data-terrain="highhill">高丘</button>
@@ -35,7 +35,7 @@
         <button type="button" class="legend-item" data-terrain="river">河流</button>
         <button type="button" class="legend-item" data-terrain="sea">海域</button>
         <button type="button" class="legend-item" data-terrain="coast">海岸</button>
-        <button type="button" class="legend-item brush-active" data-terrain="desert">沙漠</button>
+        <button type="button" class="legend-item" data-terrain="desert">沙漠</button>
       </div>
     </div>
 
@@ -50,11 +50,11 @@
     </aside>
   </div>
 
-  <script src="js/china-terrain-data.original.js?v=elev2"></script>
-  <script src="china-terrain-data.edit.js?v=elev2"></script>
-  <script src="js/jpg-source-config.js?v=elev2"></script>
-  <script src="js/map-data.js?v=elev2"></script>
-  <script src="js/map-renderer.js?v=elev2"></script>
-  <script src="js/main.js?v=elev2"></script>
+  <script src="js/china-terrain-data.original.js?v=elev3"></script>
+  <script src="china-terrain-data.edit.js?v=elev3"></script>
+  <script src="js/jpg-source-config.js?v=elev3"></script>
+  <script src="js/map-data.js?v=elev3"></script>
+  <script src="js/map-renderer.js?v=elev3"></script>
+  <script src="js/main.js?v=elev3"></script>
 </body>
 </html>
