@@ -21,10 +21,19 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 OUT_JS = ROOT / "js" / "china-terrain-data.js"
 
-MAP_W, MAP_H = 240, 180
+# 先按完整高度生成（与粗网格 2 倍对应），再裁切下方只输出显示高度
+MAP_W = 240
+FULL_H = 180
+DISPLAY_H = 120
+MAP_H = FULL_H  # 生成阶段使用完整高度；写出前裁为 DISPLAY_H
 COARSE_W, COARSE_H = 120, 90
 LON_MIN, LON_MAX = 98.0, 123.5
 LAT_MIN, LAT_MAX = 17.5, 42.0
+
+
+def display_lat_min() -> float:
+    """裁掉下方后，显示区南缘纬度（与满高 180 网格的前 120 行一致）。"""
+    return LAT_MAX - ((DISPLAY_H - 1) / (FULL_H - 1)) * (LAT_MAX - LAT_MIN)
 
 CHINA_GEOJSON_URL = "https://geo.datav.aliyun.com/areas_v3/bound/100000.json"
 RIVERS_GEOJSON_URL = (
@@ -321,10 +330,22 @@ def apply_coast(grid: list[list[str]]) -> None:
                     break
 
 
+def load_cached_elevations(cache_name: str) -> dict[tuple[int, int], float]:
+    cache_file = DATA_DIR / cache_name
+    result: dict[tuple[int, int], float] = {}
+    if not cache_file.exists():
+        return result
+    cached = json.loads(cache_file.read_text(encoding="utf-8"))
+    for item in cached.get("points", []):
+        result[(item["x"], item["y"])] = item["elev"]
+    return result
+
+
 def build_grid(
     china_geom: dict,
     river_lines: list,
     fetch_all_elevation: bool = False,
+    use_240_cache: bool = False,
     elev_batch_size: int = 30,
     elev_sleep_seconds: float = 1.8,
 ) -> list[list[str]]:
@@ -344,6 +365,18 @@ def build_grid(
             batch_size=elev_batch_size,
             sleep_seconds=elev_sleep_seconds,
         )
+    elif use_240_cache:
+        elev_map = load_cached_elevations(f"elevation_land_{MAP_W}x{MAP_H}.json")
+        from_240 = sum(1 for p in land_points if (p[0], p[1]) in elev_map)
+        print(f"  using 240×180 cache: {from_240}/{len(land_points)} cells")
+        missing = [(x, y, lon, lat) for x, y, lon, lat in land_points if (x, y) not in elev_map]
+        if missing:
+            coarse_elev = ensure_coarse_elevations(china_geom)
+            print(f"  fill missing {len(missing)} cells from 120×90 interpolation")
+            for x, y, lon, lat in missing:
+                elev = interpolate_elevation(lon, lat, coarse_elev)
+                if elev is not None:
+                    elev_map[(x, y)] = elev
     else:
         coarse_elev = ensure_coarse_elevations(china_geom)
         print(f"  interpolate elevation: 120×90 API → {MAP_W}×{MAP_H}")
@@ -375,6 +408,11 @@ def main():
         help="对当前分辨率逐格请求 Open-Meteo（慢，易限速）；默认从 120×90 API 缓存插值",
     )
     parser.add_argument(
+        "--use-240-cache",
+        action="store_true",
+        help="用已有 elevation_land_240x180.json 生成（不请求 API）；缺的格用 120×90 插值补齐",
+    )
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=30,
@@ -387,9 +425,12 @@ def main():
         help="海拔 API 每批之间的等待秒数（默认 1.8）",
     )
     args = parser.parse_args()
+    if args.fetch_all_elevation and args.use_240_cache:
+        parser.error("不能同时使用 --fetch-all-elevation 与 --use-240-cache")
 
     print("=== Generate terrain from geographic APIs ===")
-    print(f"Grid: {MAP_W}×{MAP_H}")
+    print(f"Full grid: {MAP_W}×{FULL_H} → display crop: {MAP_W}×{DISPLAY_H}")
+    print(f"Display lat: {display_lat_min():.4f}°–{LAT_MAX}°N (drop southern rows)")
     print("1) China boundary (Aliyun DataV)")
     china_geom = load_china_geometry()
 
@@ -407,9 +448,16 @@ def main():
         china_geom,
         river_lines,
         fetch_all_elevation=args.fetch_all_elevation,
+        use_240_cache=args.use_240_cache,
         elev_batch_size=args.batch_size,
         elev_sleep_seconds=args.sleep_seconds,
     )
+
+    if len(grid) != FULL_H:
+        raise RuntimeError(f"expected {FULL_H} rows, got {len(grid)}")
+    grid = grid[:DISPLAY_H]
+    out_lat_min = display_lat_min()
+    print(f"4) Crop to display: {MAP_W}×{DISPLAY_H} (lat ≥ {out_lat_min:.4f})")
 
     rows = ["".join(r) for r in grid]
     stats: dict[str, int] = {}
@@ -420,7 +468,8 @@ def main():
     OUT_JS.write_text(
         f"""/**
  * 地理 API 自动生成（scripts/generate_from_api.py）
- * 栅格 {MAP_W}×{MAP_H} · 国界/海拔/河流 API
+ * 120×90 插值 → {MAP_W}×{FULL_H}，再裁切为显示 {MAP_W}×{DISPLAY_H}
+ * 显示范围：lon {LON_MIN}–{LON_MAX}，lat {out_lat_min:.4f}–{LAT_MAX}
  * 字符: s=海 p=平原 h=丘陵 f=森林 m=山地 r=河 d=沙漠 w=沼泽 c=海岸
  */
 const CHINA_TERRAIN_ROWS = {json.dumps(rows, ensure_ascii=False)};

@@ -4,7 +4,7 @@
  */
 
 const MAP_WIDTH = 240;
-const MAP_HEIGHT = 180;
+const MAP_HEIGHT = 120;
 const TILE_SIZE = 12;
 const TERRAIN_ONLY = true;
 const TEXTURE_SIZE = 64;
@@ -63,11 +63,11 @@ const TERRAIN = {
   },
 };
 
-/** 地图覆盖范围（含东部海域） */
+/** 地图覆盖范围（240×180 插值后裁切南侧，仅显示 240×120） */
 const GEO = {
   lonMin: 98,
   lonMax: 123.5,
-  latMin: 17.5,
+  latMin: 25.7123,
   latMax: 42,
 };
 
